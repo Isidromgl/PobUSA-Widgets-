@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no"/>
+    <title>Poblacion</title>
+    <link rel="stylesheet" href="https://js.arcgis.com/3.19/esri/css/esri.css">
+    <link rel="stylesheet" href="https://js.arcgis.com/3.19/dijit/themes/claro/claro.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+
+    <style>
+        html, body, .container, #map {
+        height:100%;
+        width:100%;
+        margin:0;
+        padding:0;
+        margin:0;
+        font-family: 'Arimo', sans-serif;
+          background-color:  #003367;
+        }
+        #title{
+          color:#003367;
+          font-family: 'Arimo', sans-serif;
+          font-size: 400%;
+          text-align: center;
+          padding: 3%;
+          background-color: white;
+          margin: 2%;
+        }
+        #map {
+            padding:3%;
+        }
+        #layerListPane{
+            width:25%;
+        }
+        .esriLayer{
+          background-color: #fff;
+        }
+        .esriLayerList .esriList{
+            border-top:none;
+        }
+        .esriLayerList .esriTitle {
+          background-color: #fff;
+          border-bottom:none;
+        }
+        .esriLayerList .esriList ul{
+          background-color: #fff;
+        }
+        #search {
+           display: block;
+           position: absolute;
+           z-index: 2;
+           top: 20px;
+           left: 74px;
+          }
+        #HomeButton {
+          position: absolute;
+          top: 130px;
+          left: 66px;
+          z-index: 50;
+        }
+
+        #BasemapToggle{
+        position: absolute;
+        top: 50px;
+        right:  65px;
+        z-index: 50;
+      }
+
+
+     </style>
+     <script>var dojoConfig = { parseOnLoad: true };</script>
+    <script src="https://js.arcgis.com/3.19/"></script>
+    <script>
+      var map;
+
+      require(["esri/map",
+        "esri/arcgis/utils",
+
+        "esri/dijit/HomeButton",
+        "esri/dijit/BasemapToggle",
+        "esri/layers/FeatureLayer",
+        "esri/dijit/Search",
+        "esri/InfoTemplate",
+        "esri/layers/ArcGISDynamicMapServiceLayer",
+        "esri/dijit/LayerList",
+
+        "dijit/layout/BorderContainer",
+        "dijit/layout/ContentPane",
+        "dijit/TitlePane",
+
+        "dojo/domReady!"], function(Map,arcgisUtils,HomeButton,BasemapToggle,FeatureLayer,Search,InfoTemplate,ArcGISDynamicMapServiceLayer,LayerList
+        ) {
+         map = new Map("map", {
+          basemap: "streets",
+          center: [-110, 45],
+          zoom:3,
+        });
+        var layer = new ArcGISDynamicMapServiceLayer(
+        "http://sampleserver6.arcgisonline.com/arcgis/rest/services/USA/MapServer",{
+         useMapImage: true
+          });
+         map.addLayer(layer);
+         var layerList = new LayerList({
+            map: map,
+            showLegend: true,
+            showOpacitySlider: true,
+            layers: []
+          },"layerList");
+           layerList .startup();
+
+          var search = new Search({
+             map: map
+          }, "search");
+          search.on("load", function () {
+            var sources = search.get("sources");
+            sources.push({
+              featureLayer: new FeatureLayer("http://sampleserver6.arcgisonline.com/arcgis/rest/services/USA/MapServer/0"),
+              searchFields: ["capital", "areaname"],
+              displayField:"areaname",
+              exactMatch: false,
+              outFields: ["*"],
+              placeholder: "Ciudad o estado",
+              maxResults: 6,
+              maxSuggestions: 6,
+              infoTemplate:new InfoTemplate("${areaname}", "Capital: ${areaname}<br>Population: ${pop2000}"),
+
+            },{
+            featureLayer: new FeatureLayer("http://sampleserver6.arcgisonline.com/arcgis/rest/services/USA/MapServer/2"),
+            searchFields: ["state_name"],
+            displayField:"state_name",
+            exactMatch: false,
+            outFields: ["*"],
+            placeholder: "Ciudad o estado",
+            maxResults: 6,
+            maxSuggestions: 6,
+            infoTemplate:new InfoTemplate("${state_name}", "Estado: ${state_name}<br>Population: ${pop2000}"),
+          });
+
+            search.set("sources", sources);
+            });
+
+            search.startup();
+
+            var home = new HomeButton({
+              map: map
+              }, "HomeButton");
+              home.startup();
+
+            var toggle = new BasemapToggle({
+               map: map,
+               basemap: "satellite"
+               }, "BasemapToggle");
+               toggle.startup();
+
+      });
+    </script>
+  </head>
+
+  <body class="claro">
+    <h1 id="title">Población USA (2000)</h1>
+    <div class="row">
+      <div class="col-md-8">
+        <div id="map" data-dojo-type="dijit/layout/ContentPane" data-dojo-props="region:'center'">
+
+          <div id="HomeButton"></div>
+          <div id="BasemapToggle"></div>
+        </div>
+      </div>
+      <div class="col-md-4" style="padding:3%">
+        <div id="search" style="padding-top:3%"></div>
+        <div class="container" data-dojo-type="dijit/layout/BorderContainer"
+            data-dojo-props="design:'headline',gutters:false" >
+
+            <div data-dojo-type="dijit/TitlePane" data-dojo-props="title:'Capas', closable:false, open:false"
+            style="padding-top:80px;">
+               <div data-dojo-type="dijit/layout/ContentPane" style="width:380px; height:280px; overflow:auto;">
+                 <div id="layerList"></div>
+               </div>
+            </div>
+
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
